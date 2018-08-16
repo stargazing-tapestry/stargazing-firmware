@@ -9,7 +9,12 @@ char HOST_ADDRESS[]="a1gf6an104qasm.iot.ap-southeast-2.amazonaws.com";
 char CLIENT_ID[]="angus-client";
 char TOPIC_NAME[]="angus-topic";
 
+#define LED_BUILTIN 22
+
 void setup() {
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
+
     Serial.begin(115200);
     Serial.print("Connecting to WiFi");
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -34,12 +39,19 @@ void setup() {
         while(1);
     }
 
+    digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void mySubCallBackHandler (char *topicName, int payloadLen, char *payload) {
-    Serial.print("Received Message: ");
-    Serial.write((uint8_t *)payload, payloadLen);
-    Serial.println("");
+    // If message is "0", turn off
+    // Else if message is "1", turn on
+    if (payloadLen > 0) {
+      if (payload[0] == '0') {
+          digitalWrite(LED_BUILTIN, HIGH);
+      } else if (payload[0] == '1') {
+          digitalWrite(LED_BUILTIN, LOW);
+      }
+    }
 }
 
 // The ESP32 Arduino environment runs loop() repeatedly, in a FreeRTOS task. We don't need it.
