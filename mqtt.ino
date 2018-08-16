@@ -36,22 +36,13 @@ void setup() {
 
 }
 
-int tick=0, msgCount=0, msgReceived = 0;
-char payload[512];
-char rcvdPayload[512];
-
-void mySubCallBackHandler (char *topicName, int payloadLen, char *payLoad)
-{
-    strncpy(rcvdPayload,payLoad,payloadLen);
-    rcvdPayload[payloadLen] = 0;
-    msgReceived = 1;
+void mySubCallBackHandler (char *topicName, int payloadLen, char *payload) {
+    Serial.print("Received Message: ");
+    Serial.write((uint8_t *)payload, payloadLen);
+    Serial.println("");
 }
 
+// The ESP32 Arduino environment runs loop() repeatedly, in a FreeRTOS task. We don't need it.
 void loop() {
-    if(msgReceived == 1) {
-        msgReceived = 0;
-        Serial.print("Received Message:");
-        Serial.println(rcvdPayload);
-    }
     vTaskDelay(1000 / portTICK_RATE_MS); 
 }
