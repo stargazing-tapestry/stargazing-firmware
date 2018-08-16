@@ -1,5 +1,9 @@
 #include <AWS_IOT.h>
 #include <WiFi.h>
+#include <Adafruit_NeoPixel.h>
+
+#define NUM_LEDS 50
+#define LED_STRIP_PIN 19
 
 AWS_IOT iot;
 
@@ -11,9 +15,14 @@ char TOPIC_NAME[]="angus-topic";
 
 #define LED_BUILTIN 22
 
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_STRIP_PIN, NEO_GRB + NEO_KHZ800);
+
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
+
+    strip.begin();
+    strip.show();
 
     Serial.begin(115200);
     Serial.print("Connecting to WiFi");
@@ -42,19 +51,29 @@ void setup() {
     digitalWrite(LED_BUILTIN, HIGH);
 }
 
+int16_t frame_count[NUM_LEDS];
+uint32_t color[NUM_LEDS];
+
 void mySubCallBackHandler (char *topicName, int payloadLen, char *payload) {
-    // If message is "0", turn off
-    // Else if message is "1", turn on
-    if (payloadLen > 0) {
-      if (payload[0] == '0') {
-          digitalWrite(LED_BUILTIN, HIGH);
-      } else if (payload[0] == '1') {
-          digitalWrite(LED_BUILTIN, LOW);
-      }
-    }
+  for (int16_t i=0; i<payloadLen; i+=5) {
+    int16_t led = ((uint8_t)payload[i+0] << 8) + (uint8_t)payload[i+1];
+    color[led] = strip.Color(payload[i+2], payload[i+3], payload[i+4]);
+    frame_count[led] = 40;
+  }
 }
 
-// The ESP32 Arduino environment runs loop() repeatedly, in a FreeRTOS task. We don't need it.
+// The ESP32 Arduino environment runs loop() repeatedly, in a FreeRTOS task.
 void loop() {
-    vTaskDelay(1000 / portTICK_RATE_MS); 
+  for (int16_t i=0; i<NUM_LEDS; i++) {
+    if (frame_count[i] > 0) frame_count[i]--;
+    if (frame_count[i] > 0) {
+      strip.setPixelColor(i, color[i]);
+    } else {
+      strip.setPixelColor(i, strip.Color(0, 0, 0));
+    }
+  }
+  portDISABLE_INTERRUPTS();
+  strip.show();
+  portENABLE_INTERRUPTS();
+  delay(50);
 }
