@@ -3,7 +3,7 @@
 
 #include <NeoPixelBus.h>
 
-#define NUM_LEDS 50
+#define NUM_LEDS 350
 #define LED_STRIP_PIN 19
 
 AWS_IOT iot;
@@ -12,7 +12,7 @@ char WIFI_SSID[]="io";
 char WIFI_PASSWORD[]="password";
 char HOST_ADDRESS[]="a1gf6an104qasm.iot.ap-southeast-2.amazonaws.com";
 char CLIENT_ID[]="angus-client";
-char TOPIC_NAME[]="angus-topic";
+char TOPIC_NAME[]="test_topic";
 
 #define LED_BUILTIN 22
 
@@ -57,9 +57,9 @@ RgbColor color[NUM_LEDS];
 
 void mySubCallBackHandler (char *topicName, int payloadLen, char *payload) {
   for (int16_t i=0; i<payloadLen; i+=5) {
-    int16_t led = ((uint8_t)payload[i+0] << 8) + (uint8_t)payload[i+1];
-    color[led] = RgbColor(payload[i+2], payload[i+3], payload[i+4]);
-    frame_count[led] = 40;
+    int16_t led = ((uint8_t)payload[i+3] << 8) + (uint8_t)payload[i+4];
+    color[led] = RgbColor(payload[i+0], payload[i+1], payload[i+2]);
+    frame_count[led] = 120; // 6 seconds
   }
 }
 
